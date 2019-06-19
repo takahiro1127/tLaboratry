@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"math"
-	// "gonum.org/v1/plot"
-	// "gonum.org/v1/plot/plotter"
-	// "gonum.org/v1/plot/plotutil"
-	// "gonum.org/v1/plot/vg"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/plotutil"
+	"gonum.org/v1/plot/vg"
 )
 
 type EquationInformation struct{
@@ -33,6 +33,8 @@ func main() {
 	// examination
 	targetEquation.SetInitialValues(1)
 	fmt.Printf("%+v\n", targetEquation)
+	stockYvalue := [][]float64{{0, 0}, {1, 1}}
+	makeGraphFromSecondOrderArray(stockYvalue, "sample")
 }
 
 func defineSecondOrderDifferentalEquation(x float64, y float64, dy float64, p float64, l float64) float64 {
@@ -62,3 +64,29 @@ func (equationInformation *EquationInformation) SetInitialValues(p float64) {
 	equationInformation.InfinityY = equationInformation.InfinityEquation(equationInformation.InfinityX, p)
 	equationInformation.InfinitydY = equationInformation.InfinityDifferentalEquation(equationInformation.InfinityX, p)
 }
+
+func makeGraphFromSecondOrderArray(arr [][]float64, title string) bool {
+	p, err := plot.New()
+	if err != nil {
+			panic(err)
+	}
+	p.Title.Text = "hydrogenAtom:" + title
+	p.X.Label.Text = "r axis"
+	p.Y.Label.Text = "φ axis"
+
+	pts := make(plotter.XYs, len(arr))
+
+	for i, axis := range arr {
+			pts[i].X = axis[0]
+			pts[i].Y = axis[1]
+	}
+	err = plotutil.AddLinePoints(p, pts)
+	if err != nil {
+			panic(err)
+	}
+	if err := p.Save(5*vg.Inch, 5*vg.Inch, title + ".png"); err != nil{
+			panic(err)
+	}
+	return err == nil
+}
+

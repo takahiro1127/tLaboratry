@@ -23,7 +23,7 @@ func main() {
 		InitialX: math.Pow(10, -5),
 		InfinityX: 10,
 		TargetX: 4,
-		L: 1,
+		L: 0,
 		InitialEquation: defineInitialEquation,
 		InfinityEquation: defineInfinityEquation,
 		InitialDifferentalEquation: defineInitialDifferntalEquation,
@@ -33,11 +33,11 @@ func main() {
 	// examination
 	targetEquation.SetInitialValues(1)
 	fmt.Printf("%+v\n", targetEquation)
-	stockYvalue := [][]float64{{0, 0}, {1, 1}}
-	makeGraphFromSecondOrderArray(stockYvalue, "sample")
+	targetEquation.SecondOrderRungeKuttaMethod(1, true, true)
 }
 
 func defineSecondOrderDifferentalEquation(x float64, y float64, dy float64, p float64, l float64) float64 {
+	// return (-2/x + math.Pow(p, 2))*y
 	return (l * (l + 1) * math.Pow(x, 2) + -2/x + math.Pow(p, 2))*y //l = 0, p = 1/n(n = 1)
 }
 
@@ -63,6 +63,50 @@ func (equationInformation *EquationInformation) SetInitialValues(p float64) {
 	equationInformation.InitialdY = equationInformation.InitialDifferentalEquation(equationInformation.InitialX, equationInformation.L)
 	equationInformation.InfinityY = equationInformation.InfinityEquation(equationInformation.InfinityX, p)
 	equationInformation.InfinitydY = equationInformation.InfinityDifferentalEquation(equationInformation.InfinityX, p)
+}
+
+func (equationInformation *EquationInformation) SecondOrderRungeKuttaMethod(p float64, plus bool, makeGraph bool) (float64, float64) {
+	var targetY = equationInformation.InitialY
+	var targetX = equationInformation.TargetX
+	var targetdY = equationInformation.InitialdY
+	var initialX = equationInformation.InitialX
+	stockYvalue := [][]float64{}
+
+
+	for i := int(initialX*1000); i < int(targetX*1000); i++ {
+		var step = 0.001
+
+		var p1 = step*equationInformation.SecondOrderDifferentalEquation(initialX, targetY, targetdY, p, equationInformation.L)
+		var k1 = step*targetdY
+
+		var p2 = step*equationInformation.SecondOrderDifferentalEquation(initialX+step/2, targetY+k1/2, targetdY+p1/2, p, equationInformation.L)
+		var k2 = step*(targetdY+p1/2)
+
+		var p3 = step*equationInformation.SecondOrderDifferentalEquation(initialX+step/2, targetY+k2/2, targetdY+p2/2, p, equationInformation.L)
+		var k3 = step*(targetdY+p2/2)
+
+		var p4 = step*equationInformation.SecondOrderDifferentalEquation(initialX+step, targetY+k3, targetdY+p3, p, equationInformation.L)
+		var k4 = step*(targetdY+p3)
+
+		initialX = initialX + step
+		targetY = targetY + (k1 + 2 * k2 + 2 * k3 + k4)/6
+		targetdY = targetdY + (p1 + 2 * p2 + 2 * p3 + p4)/6
+		if i%33 == 0 {
+			stockYvalue = append(stockYvalue, []float64{float64(i/1000)+float64(i%1000)/1000, targetY})
+		}
+		if !plus {
+			i = i - 2
+		}
+	}
+	if makeGraph {
+		var title = "fromZero"
+		if !plus { title = "fromInfinity" }
+		err := makeGraphFromSecondOrderArray(stockYvalue, title)
+		if !err {
+			panic(err)
+		}
+	}
+	return targetY, targetdY
 }
 
 func makeGraphFromSecondOrderArray(arr [][]float64, title string) bool {

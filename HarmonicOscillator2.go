@@ -34,10 +34,10 @@ func main() {
 	targetEquation.SetInitialValues(1)
 	fmt.Printf("%+v\n", targetEquation)
 	targetEquation.SecondOrderRungeKuttaMethod(1, true, true)
+	targetEquation.SecondOrderRungeKuttaMethod(1, false, true)
 }
 
 func defineSecondOrderDifferentalEquation(x float64, y float64, dy float64, p float64, l float64) float64 {
-	// return (-2/x + math.Pow(p, 2))*y
 	return (l * (l + 1) * math.Pow(x, 2) + -2/x + math.Pow(p, 2))*y //l = 0, p = 1/n(n = 1)
 }
 
@@ -70,10 +70,16 @@ func (equationInformation *EquationInformation) SecondOrderRungeKuttaMethod(p fl
 	var targetX = equationInformation.TargetX
 	var targetdY = equationInformation.InitialdY
 	var initialX = equationInformation.InitialX
+	if !plus {
+		targetY = equationInformation.InfinityY
+		targetX = equationInformation.TargetX
+		targetdY = equationInformation.InfinityY
+		initialX = equationInformation.InfinityX
+	}
 	stockYvalue := [][]float64{}
 
 
-	for i := int(initialX*1000); i < int(targetX*1000); i++ {
+	for i := int(initialX*1000); i != int(targetX*1000); i++ {
 		var step = 0.001
 
 		var p1 = step*equationInformation.SecondOrderDifferentalEquation(initialX, targetY, targetdY, p, equationInformation.L)

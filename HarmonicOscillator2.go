@@ -26,8 +26,8 @@ type Wronskians []Wronskian
 func main() {
 	targetEquation := EquationInformation{
 		InitialX: math.Pow(10, -5),
-		InfinityX: 10,
-		TargetX: 4,
+		InfinityX: 5,
+		TargetX: 2,
 		L: 0,
 		InitialEquation: defineInitialEquation,
 		InfinityEquation: defineInfinityEquation,
@@ -35,11 +35,6 @@ func main() {
 		InfinityDifferentalEquation: defineInfinityDifferentalEquation,
 		SecondOrderDifferentalEquation: defineSecondOrderDifferentalEquation,
 	}
-	// examination
-	targetEquation.SetInitialValues(1)
-	fmt.Printf("%+v\n", targetEquation)
-	targetEquation.SecondOrderRungeKuttaMethod(1, true, true)
-	targetEquation.SecondOrderRungeKuttaMethod(1, false, true)
 
 	var p = []float64{0.8, 0.9}
 	var wronskians Wronskians
@@ -49,19 +44,35 @@ func main() {
 		wronskian.targetY, wronskian.targetdY = targetEquation.SecondOrderRungeKuttaMethod(p[i], true, false)
 		wronskian.targetYfromInfinity, wronskian.targetdYfromInfinity = targetEquation.SecondOrderRungeKuttaMethod(p[i], false, false)
 		wronskians = append(wronskians, wronskian)
-		if i == 0 { continue }
+		if i == 0 {
+			continue
+		}
 		beforeWronskian := wronskians[i - 1].Determinant()
-		currentWronskian := wronskians[i].Determinant()
-		p = append(p, (currentWronskian * p[i] - beforeWronskian * p[i - 1]) / (beforeWronskian - currentWronskian))
-		if ((p[i + 1] - p[i])/p[i]) < math.Pow(10, -5) {
+		currentWronskian := wronskian.Determinant()
+		if i == 4 {
+			fmt.Println(wronskian)
+			fmt.Println(wronskians[i])
+		}
+		p = append(p, ((currentWronskian * p[i -1] - beforeWronskian * p[i]) / (currentWronskian - beforeWronskian)))
+		if (math.Abs((p[i] - p[i - 1])/p[i -1])) < math.Pow(10, -5) {
 			targetEquation.SecondOrderRungeKuttaMethod(p[i], true, true)
 			targetEquation.SecondOrderRungeKuttaMethod(p[i], false, true)
-			fmt.Println(p)
 			break
 		}
 	}
+	// targetEquation.SecondOrderRungeKuttaMethod(0.7, true, true)
+	// targetEquation.SetInitialValues(1)
+	// fmt.Println(math.Pow(math.E, -5.0))
+	// targetEquation.SecondOrderRungeKuttaMethod(1, true, true)
+	// targetEquation.SecondOrderRungeKuttaMethod(1, false, true)
+	// fmt.Println(targetEquation.InfinityY)
+	// fmt.Println(targetEquation.InfinityX)
+	// var aaaa Wronskian
+	// aaaa.targetY, aaaa.targetdY, aaaa.targetYfromInfinity, aaaa.targetdYfromInfinity = 1, 2, 3, 4
+	fmt.Println(aaaa.Determinant())
 
 
+	fmt.Println(p)
 }
 
 func defineSecondOrderDifferentalEquation(x float64, y float64, dy float64, p float64, l float64) float64 {
@@ -73,15 +84,17 @@ func defineInitialEquation(x float64, l float64) float64 {
 }
 
 func defineInitialDifferntalEquation(x float64, l float64) float64 {
-	return (l + 1) * math.Pow(x, l)
+	// return (l + 1) * math.Pow(x, l)
+	return 1
 }
 
 func defineInfinityEquation(x float64, p float64) float64 {
-	return math.Pow(math.E, -p * x)
+	return math.Pow(math.E, -1 * p * x)
+	// return math.Pow(math.E, -1 * p * x)
 }
 
 func defineInfinityDifferentalEquation(x float64, p float64) float64 {
-	return -1 * p * math.Pow(math.E, -p * x)
+	return -1 * p * math.Pow(math.E, -1 * p * x)
 }
 
 func (equationInformation *EquationInformation) SetInitialValues(p float64) {
@@ -100,38 +113,47 @@ func (equationInformation *EquationInformation) SecondOrderRungeKuttaMethod(p fl
 	var targetX = equationInformation.TargetX
 	var targetdY = equationInformation.InitialdY
 	var initialX = equationInformation.InitialX
+	var stockYvalue = [][]float64{{equationInformation.InitialX, equationInformation.InitialY}}
+
 	if !plus {
 		targetY = equationInformation.InfinityY
 		targetX = equationInformation.TargetX
 		targetdY = equationInformation.InfinityY
 		initialX = equationInformation.InfinityX
+		stockYvalue = [][]float64{{equationInformation.InfinityX, equationInformation.InfinityY}}
 	}
-	stockYvalue := [][]float64{}
-
 
 	for i := int(initialX*1000); i != int(targetX*1000); i++ {
 		var step = 0.001
-
-		var p1 = step*equationInformation.SecondOrderDifferentalEquation(initialX, targetY, targetdY, p, equationInformation.L)
-		var k1 = step*targetdY
-
-		var p2 = step*equationInformation.SecondOrderDifferentalEquation(initialX+step/2, targetY+k1/2, targetdY+p1/2, p, equationInformation.L)
-		var k2 = step*(targetdY+p1/2)
-
-		var p3 = step*equationInformation.SecondOrderDifferentalEquation(initialX+step/2, targetY+k2/2, targetdY+p2/2, p, equationInformation.L)
-		var k3 = step*(targetdY+p2/2)
-
-		var p4 = step*equationInformation.SecondOrderDifferentalEquation(initialX+step, targetY+k3, targetdY+p3, p, equationInformation.L)
-		var k4 = step*(targetdY+p3)
-
-		initialX = initialX + step
-		targetY = targetY + (k1 + 2 * k2 + 2 * k3 + k4)/6
-		targetdY = targetdY + (p1 + 2 * p2 + 2 * p3 + p4)/6
+		var p1, k1, p2, k2, p3, k3, p4, k4 float64
+		if plus {
+			p1 = step*equationInformation.SecondOrderDifferentalEquation(initialX, targetY, targetdY, p, equationInformation.L)
+			k1 = step*targetdY
+			p2 = step*equationInformation.SecondOrderDifferentalEquation(initialX+step/2, targetY+k1/2, targetdY+p1/2, p, equationInformation.L)
+			k2 = step*(targetdY+p1/2)
+			p3 = step*equationInformation.SecondOrderDifferentalEquation(initialX+step/2, targetY+k2/2, targetdY+p2/2, p, equationInformation.L)
+			k3 = step*(targetdY+p2/2)
+			p4 = step*equationInformation.SecondOrderDifferentalEquation(initialX+step, targetY+k3, targetdY+p3, p, equationInformation.L)
+			k4 = step*(targetdY+p3)
+			initialX = initialX + step
+			targetY = targetY + (k1 + 2 * k2 + 2 * k3 + k4)/6
+			targetdY = targetdY + (p1 + 2 * p2 + 2 * p3 + p4)/6
+		} else {
+			p1 = step*equationInformation.SecondOrderDifferentalEquation(initialX, targetY, targetdY, p, equationInformation.L)
+			k1 = step*targetdY
+			p2 = step*equationInformation.SecondOrderDifferentalEquation(initialX-step/2, targetY+k1/2, targetdY+p1/2, p, equationInformation.L)
+			k2 = step*(targetdY-p1/2)
+			p3 = step*equationInformation.SecondOrderDifferentalEquation(initialX-step/2, targetY+k2/2, targetdY+p2/2, p, equationInformation.L)
+			k3 = step*(targetdY-p2/2)
+			p4 = step*equationInformation.SecondOrderDifferentalEquation(initialX-step, targetY+k3, targetdY+p3, p, equationInformation.L)
+			k4 = step*(targetdY-p3)
+			initialX = initialX - step
+			targetY = targetY + (k1 + 2 * k2 + 2 * k3 + k4)/6
+			targetdY = targetdY + (p1 + 2 * p2 + 2 * p3 + p4)/6
+			i = i - 2
+		}
 		if i%33 == 0 {
 			stockYvalue = append(stockYvalue, []float64{float64(i/1000)+float64(i%1000)/1000, targetY})
-		}
-		if !plus {
-			i = i - 2
 		}
 	}
 	if makeGraph {
@@ -141,6 +163,8 @@ func (equationInformation *EquationInformation) SecondOrderRungeKuttaMethod(p fl
 		if !err {
 			panic(err)
 		}
+		fmt.Println(p)
+		fmt.Println("作ったよ")
 	}
 	return targetY, targetdY
 }

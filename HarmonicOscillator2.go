@@ -17,6 +17,11 @@ type EquationInformation struct{
 	InfinityEquation func(x float64, p float64) float64
 	InfinityDifferentalEquation func(x float64, p float64) float64
 }
+type Wronskian struct {
+	targetY, targetdY, targetYfromInfinity, targetdYfromInfinity float64
+}
+
+type Wronskians []Wronskian
 
 func main() {
 	targetEquation := EquationInformation{
@@ -35,6 +40,28 @@ func main() {
 	fmt.Printf("%+v\n", targetEquation)
 	targetEquation.SecondOrderRungeKuttaMethod(1, true, true)
 	targetEquation.SecondOrderRungeKuttaMethod(1, false, true)
+
+	var p = []float64{0.8, 0.9}
+	var wronskians Wronskians
+	for i := 0; i < 30; i++ {
+		targetEquation.SetInitialValues(p[i])
+		wronskian := Wronskian{}
+		wronskian.targetY, wronskian.targetdY = targetEquation.SecondOrderRungeKuttaMethod(p[i], true, false)
+		wronskian.targetYfromInfinity, wronskian.targetdYfromInfinity = targetEquation.SecondOrderRungeKuttaMethod(p[i], false, false)
+		wronskians = append(wronskians, wronskian)
+		if i == 0 { continue }
+		beforeWronskian := wronskians[i - 1].Determinant()
+		currentWronskian := wronskians[i].Determinant()
+		p = append(p, (currentWronskian * p[i] - beforeWronskian * p[i - 1]) / (beforeWronskian - currentWronskian))
+		if ((p[i + 1] - p[i])/p[i]) < math.Pow(10, -5) {
+			targetEquation.SecondOrderRungeKuttaMethod(p[i], true, true)
+			targetEquation.SecondOrderRungeKuttaMethod(p[i], false, true)
+			fmt.Println(p)
+			break
+		}
+	}
+
+
 }
 
 func defineSecondOrderDifferentalEquation(x float64, y float64, dy float64, p float64, l float64) float64 {
@@ -46,8 +73,7 @@ func defineInitialEquation(x float64, l float64) float64 {
 }
 
 func defineInitialDifferntalEquation(x float64, l float64) float64 {
-	return 1 //l = 1
-	//(l + 1) * math.Pow(x, l)
+	return (l + 1) * math.Pow(x, l)
 }
 
 func defineInfinityEquation(x float64, p float64) float64 {
@@ -63,6 +89,10 @@ func (equationInformation *EquationInformation) SetInitialValues(p float64) {
 	equationInformation.InitialdY = equationInformation.InitialDifferentalEquation(equationInformation.InitialX, equationInformation.L)
 	equationInformation.InfinityY = equationInformation.InfinityEquation(equationInformation.InfinityX, p)
 	equationInformation.InfinitydY = equationInformation.InfinityDifferentalEquation(equationInformation.InfinityX, p)
+}
+
+func (wronskian *Wronskian) Determinant() float64 {
+	return wronskian.targetY * wronskian.targetdYfromInfinity - wronskian.targetdY * wronskian.targetYfromInfinity
 }
 
 func (equationInformation *EquationInformation) SecondOrderRungeKuttaMethod(p float64, plus bool, makeGraph bool) (float64, float64) {

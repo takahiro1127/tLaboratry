@@ -26,7 +26,7 @@ type Wronskians []Wronskian
 func main() {
 	targetEquation := EquationInformation{
 		InitialX: math.Pow(10, -5),
-		InfinityX: 5,
+		InfinityX: 20,
 		TargetX: 2,
 		L: 0,
 		InitialEquation: defineInitialEquation,
@@ -36,7 +36,7 @@ func main() {
 		SecondOrderDifferentalEquation: defineSecondOrderDifferentalEquation,
 	}
 
-	var p = []float64{0.8, 0.9}
+	var p = []float64{0.51, 0.5}
 	var wronskians Wronskians
 	for i := 0; i < 30; i++ {
 		targetEquation.SetInitialValues(p[i])
@@ -60,18 +60,6 @@ func main() {
 			break
 		}
 	}
-	// targetEquation.SecondOrderRungeKuttaMethod(0.7, true, true)
-	// targetEquation.SetInitialValues(1)
-	// fmt.Println(math.Pow(math.E, -5.0))
-	// targetEquation.SecondOrderRungeKuttaMethod(1, true, true)
-	// targetEquation.SecondOrderRungeKuttaMethod(1, false, true)
-	// fmt.Println(targetEquation.InfinityY)
-	// fmt.Println(targetEquation.InfinityX)
-	// var aaaa Wronskian
-	// aaaa.targetY, aaaa.targetdY, aaaa.targetYfromInfinity, aaaa.targetdYfromInfinity = 1, 2, 3, 4
-	fmt.Println(aaaa.Determinant())
-
-
 	fmt.Println(p)
 }
 
@@ -165,6 +153,9 @@ func (equationInformation *EquationInformation) SecondOrderRungeKuttaMethod(p fl
 		}
 		fmt.Println(p)
 		fmt.Println("作ったよ")
+	}
+	if !plus {
+		return targetY, -1 * targetdY
 	}
 	return targetY, targetdY
 }

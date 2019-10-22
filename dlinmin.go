@@ -4,15 +4,16 @@ import(
 	"fmt"
 )
 
-type Vector struct {
-
-}
-
 // Aには[[行要素m個]*n個]でn*m行列を作る
 
 
 func main() {
-	
+	var A [][]int
+	A[0] = []int{3, 0}
+	A[1] = []int{0, 4}
+	x := []int{3, 9}
+	b := []int{1, 45}
+	fmt.Println(conjugarteGradient(A, b, x))
 }
 
 func conjugarteGradient(A [][]int, b []int, x []int) []int{
@@ -20,11 +21,20 @@ func conjugarteGradient(A [][]int, b []int, x []int) []int{
 	r := make([]int, dimension)
 	p := make([]int, dimension)
 	a := make([]int, dimension)
+	B := make([][]int, dimension)
+	targetx := make([][]int, dimension) //自信ないところ！！！
+	targetx[0] = x
+	B[0] = b
 	r[0] = minus(b, product(A, x))
 	p[0] = r[0]
 	for i := 0; i < dimension; i++ {
-		a[i] = 
+		a[i] = product(r[i], p[i])/(product(p[i], product(A, p[i])))
+		x[i+1] = x[i] + a[i]*r[i]
+		r[i+1] = r[i] - a[i]*product(A, p[i])
+		B[i] = -1 * product(r[i+1], product(A, p[i]))/(product(p[i], product(A, p[i])))
+		p[i+1] = r[i+1] + b[i]*p[k]
 	}
+	return x[len(x)]
 }
 
 func product(A [][]int, x []int) []int{
@@ -48,8 +58,13 @@ func minus(a, b []int) []int{
 	return x
 }
 
-func conjugate(x, y []int, A [][]int) {
-	
+func product(x, y []int) []int {
+	dimension = len(x)
+	xy := make([]int, dimension)
+	for j := 0; j < dimension; j++ {
+		xy[j] = y[j] * x[j]
+	}
+	return xy
 }
 
 
